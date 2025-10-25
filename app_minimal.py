@@ -122,7 +122,36 @@ if "log_path" not in ss:
     logs_dir.mkdir(parents=True, exist_ok=True)
     ss["log_path"] = logs_dir / f"log_{datetime.now().strftime('%Y-%m-%d_%H-%M')}.csv"
 log_path: Path = Path(ss["log_path"])
-st.caption(f"Logs append to: **{log_path}**")
+#st.caption(f"Logs append to: **{log_path}**")
+# Replace this:
+# st.caption(f"Logs append to: **{log_path}**")
+
+# With this:
+st.write("**Log file:**")
+if log_path.exists():
+    # nice Download button
+    with open(log_path, "rb") as f:
+        st.download_button(
+            "⬇️ Download log CSV",
+            f,
+            file_name=log_path.name,
+            mime="text/csv",
+            use_container_width=True,
+        )
+
+    # also show a clickable HTML link that triggers a download via data: URL
+    try:
+        import base64
+        data_b64 = base64.b64encode(log_path.read_bytes()).decode("ascii")
+        href = f'<a href="data:text/csv;base64,{data_b64}" download="{log_path.name}" target="_blank">{log_path}</a>'
+        st.markdown(href, unsafe_allow_html=True)
+    except Exception as e:
+        # fallback: show the path as text if encoding fails
+        st.caption(str(log_path))
+else:
+    st.caption(f"{log_path} (will be created after your first STOP)")
+    st.button("⬇️ Download log CSV", disabled=True, use_container_width=True)
+
 
 # Load CSV once (requires only Stitch video, Condition; keeps all extra cols)
 if csv_file and ss["df"] is None:
